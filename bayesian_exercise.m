@@ -1,8 +1,9 @@
 %%
 %Bayesian code
+% This is MATLAB
 %Author by Yu
 
-%% ÉèÖÃµÄÀíÂÛÇúÏß
+%% è®¾ç½®çš„ç†è®ºæ›²çº¿
 %data produce 
 rseed	= 1;
 rand('state',rseed);
@@ -13,14 +14,14 @@ Tn = sin(Xn);
 plot(Xn, Tn, 'g', 'LineWidth', 2);
 hold on;
 
-noiseToSignal = 0.1;            % ÒıÈëµÄÔëÉù·½²î
-basisWidth = 0.05;              % ºËº¯ÊıµÄ´ø¿í
+noiseToSignal = 0.1;            % å¼•å…¥çš„å™ªå£°æ–¹å·®
+basisWidth = 0.05;              % æ ¸å‡½æ•°çš„å¸¦å®½
 pSparse = 0.9;
 
 N = max(Xn) - min(Xn);
 X = Xn./N;
 C = X; 
-Basis = exp(-distSquared(X,C)/(basisWidth^2));         % ÓÉºËº¯ÊıµÃµ½µÄ»ùº¯Êı
+Basis = exp(-distSquared(X,C)/(basisWidth^2));         % ç”±æ ¸å‡½æ•°å¾—åˆ°çš„åŸºå‡½æ•°
 [N M] = size(Basis);
 w = randn(M, 1)*100/(M*(1 - pSparse));
 sparse = rand(M, 1)<pSparse;
@@ -28,32 +29,32 @@ w(sparse) = 0;
 
 Y = Basis * w;
 noise = std(Y) * noiseToSignal;
-Yn = Y + noise;                                   % ×÷ÎªÒÑÖªµÄº¯ÊıÄ¿±êÖµ
+Yn = Y + noise;                                   % ä½œä¸ºå·²çŸ¥çš„å‡½æ•°ç›®æ ‡å€¼
 plot(Xn, Yn, 'r:', 'LineWidth', 2);
 
-%% ÉèÖÃÌí¼ÓÔëÉùºóµÄÇúÏß
+%% è®¾ç½®æ·»åŠ å™ªå£°åçš„æ›²çº¿
 % Sparse bayes inference section
-init_alpha_max = 1000;                   % ÉèÖÃ°¢¶û·¨µÄ³õÊ¼Öµ£¬Ô½´óÔ½ºÃ£¬ËµÃ÷Ô½Ï¡Êè
+init_alpha_max = 1000;                   % è®¾ç½®é˜¿å°”æ³•çš„åˆå§‹å€¼ï¼Œè¶Šå¤§è¶Šå¥½ï¼Œè¯´æ˜è¶Šç¨€ç–
 init_alpha_min = -1000;
 beta = 1/noiseToSignal^2;
 
 Yntemp = Yn;
 proj = Basis' * Yntemp;
 [foo used] = max(abs(proj));
-Phi = Basis(:, used);                     % Ïà¹ØÏòÁ¿
+Phi = Basis(:, used);                     % ç›¸å…³å‘é‡
 
-% ¹ØÓÚ°¢¶û·¨µÄ³õÊ¼»¯
+% å…³äºé˜¿å°”æ³•çš„åˆå§‹åŒ–
 si = diag(Phi' * Phi) * beta;
 qi = (Phi' * Yn) * beta;
 alpha = si.^2./(qi.^2 - si);
 alpha(alpha<0) = init_alpha_max;
 beta = 1/noiseToSignal^2;
 
-% ¼ÆËã»ùº¯ÊıºÍÏà¹ØÏòÁ¿µÄ³Ë»ı
+% è®¡ç®—åŸºå‡½æ•°å’Œç›¸å…³å‘é‡çš„ä¹˜ç§¯
 Basis_Phi = Basis' * Phi;
 Basis_Yn = Basis' * Yn;
 
-%% ¼ÆËãºóÑé¸ÅÂÊ Sigma,Mu
+%% è®¡ç®—åéªŒæ¦‚ç‡ Sigma,Mu
 U = chol(Phi' * Phi * beta + diag(alpha));
 Ui = inv(U);
 Sigma = Ui * Ui';
@@ -74,7 +75,7 @@ for iteration = 1:step_max
     error = Yn-y;
     g = Basis'*error - Alpha.*Mu;
     Basis_B = Basis .* (Basis * ones(1,M));
-    H = (Basis_B' * Basis + A);               % H±íÊ¾Hessian¾ØÕó¼ÆËã
+    H = (Basis_B' * Basis + A);               % Hè¡¨ç¤ºHessiançŸ©é˜µè®¡ç®—
     [U_new, pdErr] = chol(H);
     DeltaMu = U\(U' \ g);
     step = 1;
@@ -94,35 +95,35 @@ end
 Ui_new = inv(U_new)
 Sigma_new = Ui_new * Ui_new';
 
-%% ¼ÆËãºÍÏ¡Êè±´Ò¶Ë¹Ïà¹ØµÄ×´Ì¬Á¿
-% ¼ÆËã¶ÔÊıĞÎÊ½±ßÔµ×î´óËÆÈ»¹À¼Æ
+%% è®¡ç®—å’Œç¨€ç–è´å¶æ–¯ç›¸å…³çš„çŠ¶æ€é‡
+% è®¡ç®—å¯¹æ•°å½¢å¼è¾¹ç¼˜æœ€å¤§ä¼¼ç„¶ä¼°è®¡
 logdet = sum(log(diag(U_new)))
 logML = -(Mu.^2)'*alpha/2 + sum(log(alpha))/2 - logdet;
 diagc= sum(Ui_new.^2,2);
 Gamma = 1-alpha.*diagc;
 
-% ¼ÆËãQºÍSµÄÖµ
+% è®¡ç®—Qå’ŒSçš„å€¼
 betaBasis_Phi = beta*Basis_Phi;
 s_in = beta - sum((betaBasis_Phi*Ui_new).^2,2);
 q_in = beta*(Basis_Yn - Basis_Phi*Mu);
-% µ±QºÍS²»ÔÚ»ùº¯ÊıÄÚÊ±
+% å½“Qå’ŒSä¸åœ¨åŸºå‡½æ•°å†…æ—¶
 s_out(used) = (alpha .* s_in(used))./(alpha - s_in(used));
 q_out(used) = (alpha .* q_in(used))./(alpha - s_in(used));
-% ÕâÑù¾Í¿ÉÒÔ¼ÆËãÓÃÓÚÅĞ±ğ°¢¶û·¨±í´ïÊ½·ÖÄ¸µÄÕı¸ºÁË
+% è¿™æ ·å°±å¯ä»¥è®¡ç®—ç”¨äºåˆ¤åˆ«é˜¿å°”æ³•è¡¨è¾¾å¼åˆ†æ¯çš„æ­£è´Ÿäº†
 theta = q_out.*q_out - s_out;
 
 addcount = 0;
 deletecount = 0;
 updatacount = 0;
-% °¢¶û·¨ÎªÕıÇÒÓĞÏŞ£¬ÖØĞÂ¹À¼Æ£»ÎªÕıÎŞÇî£¬Ìí¼ÓºËº¯Êıµ½»ùº¯ÊıÔÙÖØĞÂ¸üĞÂ£»Îª¸ºÇÒÎŞÏŞ£¬ÔòÉ¾³ı²¢ÖÃÎªÎŞÏŞ
-% ÖØĞÂ¹À¼Æ
+% é˜¿å°”æ³•ä¸ºæ­£ä¸”æœ‰é™ï¼Œé‡æ–°ä¼°è®¡ï¼›ä¸ºæ­£æ— ç©·ï¼Œæ·»åŠ æ ¸å‡½æ•°åˆ°åŸºå‡½æ•°å†é‡æ–°æ›´æ–°ï¼›ä¸ºè´Ÿä¸”æ— é™ï¼Œåˆ™åˆ é™¤å¹¶ç½®ä¸ºæ— é™
+% é‡æ–°ä¼°è®¡
 ZeroFactor = 1e-12;
 usedtheta = theta(used);
 iftheta = usedtheta > ZeroFactor;
 index = used(iftheta);
 newalpha = s_out(index).^2./theta(index);
-delta = (1./newalpha - 1./alpha(index));    % ÁÙÊ±ÏòÁ¿
-% É¾³ı
+delta = (1./newalpha - 1./alpha(index));    % ä¸´æ—¶å‘é‡
+% åˆ é™¤
 iftheta = ~iftheta;
 index = used(iftheta);
 delete = ~
